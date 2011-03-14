@@ -16,6 +16,9 @@ void main(void)
     P1OUT &= ~BIT6;
     
     /* Stole this from somewhere.  Seems to be right for the onboard switch */
+    /* Finally looked up PnIES.  sets leading or trailing edge IRQ.  Here
+     * we've set trailing edge (high to low transition)
+     */
     P1IES |= BIT3;   // high -> low is selected with IES.x = 1.
     
     
