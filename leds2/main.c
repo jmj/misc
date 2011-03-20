@@ -3,21 +3,44 @@
 /* Global for delay timer */
 int delay_multiplyer = 5;
 
+/*
+ * basic init function.  Use this for almost every project
+ */
+void _init_board(int button_enable) {
+	/* Set all p1.x and p2.x to output (saves power) */
+	P1DIR = 0xff; 
+	P2DIR = 0xff;
+	
+	/* Set all pins to low */
+	P1OUT = 0;
+	P2OUT = 0;
+	
+	/* Turn off the watchdog timer */
+	WDTCTL = WDTPW + WDTHOLD;
+	
+	/* Enable the onboard button on P1.3 */ 
+	if (button_enable) {
+		P1DIR &= ~BIT3;
+	}
+}
+
 void main(void)
 {
 	unsigned int i;
 	int mode = 1;
-
-	WDTCTL = WDTPW + WDTHOLD;  // Stop watchdog timer
-  	P1DIR = 0;
-	P1DIR = BIT0|BIT6|BIT4|BIT5|BIT7; // Set LEDs to out
 	
-	/* Turn LED1 on and LED2 off */
-	P1OUT |= BIT0;
-	P1OUT |= BIT6;
-	P1OUT |= BIT4;
-	P1OUT |= BIT5;
-	P1OUT |= BIT7;
+	_init_board(1);
+
+//	WDTCTL = WDTPW + WDTHOLD;  // Stop watchdog timer
+// 	P1DIR = 0;
+//	P1DIR = BIT0|BIT6|BIT4|BIT5|BIT7; // Set LEDs to out
+	
+//	/* Turn LED1 on and LED2 off */
+//	P1OUT |= BIT0;
+//	P1OUT |= BIT6;
+//	P1OUT |= BIT4;
+//	P1OUT |= BIT5;
+//	P1OUT |= BIT7;
 	
 	/* Stole this from somewhere.  Seems to be right for the onboard switch */
 	P1IES |= BIT3;   // high -> low is selected with IES.x = 1.
@@ -36,7 +59,8 @@ void main(void)
 		for (;;){
 			/* modified from some example */
 			//i = 10000*delay_multiplyer;
-			i = 5000*delay_multiplyer;
+			//i = 5000*delay_multiplyer;
+			i = 2000*delay_multiplyer;
 			do (i--);
 			while (i != 0);
 			
