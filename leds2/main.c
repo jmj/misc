@@ -1,7 +1,8 @@
 #include  <msp430g2231.h>
 
 /* Global for delay timer */
-int delay_multiplyer = 5;
+volatile int delay_multiplyer = 5;
+volatile int dir = 1;
 
 /*
  * basic init function.  Use this for almost every project
@@ -26,23 +27,16 @@ void _init_board(int button_enable) {
 
 void main(void)
 {
-	unsigned int i;
-	int mode = 1;
+	volatile unsigned long i;
+	unsigned int x;
+	unsigned int shifter = 0x01;
+	int mode = 0;
+	int dir2 = 1;
 	
 	_init_board(1);
+	P1OUT = 0xff;
 
-//	WDTCTL = WDTPW + WDTHOLD;  // Stop watchdog timer
-// 	P1DIR = 0;
-//	P1DIR = BIT0|BIT6|BIT4|BIT5|BIT7; // Set LEDs to out
 	
-//	/* Turn LED1 on and LED2 off */
-//	P1OUT |= BIT0;
-//	P1OUT |= BIT6;
-//	P1OUT |= BIT4;
-//	P1OUT |= BIT5;
-//	P1OUT |= BIT7;
-	
-	/* Stole this from somewhere.  Seems to be right for the onboard switch */
 	P1IES |= BIT3;   // high -> low is selected with IES.x = 1.
 	
 	
@@ -57,57 +51,41 @@ void main(void)
 #ifndef foo
 
 		for (;;){
-			/* modified from some example */
-			//i = 10000*delay_multiplyer;
+			//i = 50000*delay_multiplyer;
 			//i = 5000*delay_multiplyer;
 			i = 2000*delay_multiplyer;
+
 			do (i--);
 			while (i != 0);
-			
-			/* flip the LEDs */
-			//P1OUT ^= BIT0;
-			//P1OUT ^= BIT6;
+
+			P1OUT = 0;
 			if (mode%5 == 0){
-			//	/* 0 on 6/4 off */
-					P1OUT &= ~BIT0;
-					P1OUT |= BIT4;
-					P1OUT |= BIT5;
-					P1OUT |= BIT6;
-					P1OUT |= BIT7;
+				P1OUT |= BIT0;
 			}
 			else if (mode%5 == 1) {
-				/* 6 on 0/4 off */
-					P1OUT |= BIT0;
-					P1OUT &= ~BIT4;
-					P1OUT |= BIT5;
-					P1OUT |= BIT6;
-					P1OUT |= BIT7;
+				P1OUT |= BIT4;
 			}
-			else if (mode%5 ==2){
-				/* 4 on 0/6 0ff */
-					P1OUT |= BIT0;
-					P1OUT |= BIT4;
-					P1OUT &= ~BIT5;
-					P1OUT |= BIT6;
-					P1OUT |= BIT7;
+			else if (mode%5 == 2){
+				P1OUT |= BIT5;
 			}
 			else if (mode%5 == 3) {
-					P1OUT |= BIT0;
-					P1OUT |= BIT4;
-					P1OUT |= BIT5;
-					P1OUT &= ~BIT6;
-					P1OUT |= BIT7;
+				P1OUT |= BIT6;
 			}
 			else if (mode%5 == 4) {
-					P1OUT |= BIT0;
-					P1OUT |= BIT4;
-					P1OUT |= BIT5;
-					P1OUT |= BIT6;
-					P1OUT &= ~BIT7;
+				P1OUT |= BIT7;
 			}
-			mode++;
-			if (mode > 5) {
-				mode = 1;
+			
+			if (dir2){
+				mode++;
+				if (mode == 4) {
+					dir2 = 0;
+				}
+			}
+			else {
+				mode--;
+				if (mode == 0) {
+					dir2 = 1;
+				}
 			}
 				
 	}
@@ -121,11 +99,18 @@ __interrupt void P1_ISR(void) {
 	switch(P1IFG&BIT3) {
 		case BIT3:
 			P1IFG &= ~BIT3; // clear
-			if (delay_multiplyer == 0){
-				delay_multiplyer = 5;
+			
+			if (dir){
+				delay_multiplyer--;
+				if (delay_multiplyer == 1){
+					dir = 0;
+				}
 			}
 			else {
-				delay_multiplyer--;
+				delay_multiplyer++;
+				if (delay_multiplyer == 5){
+					dir = 1;
+				}
 			}
 			return;
 		default:
