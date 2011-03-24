@@ -27,7 +27,7 @@ void _init_board(int button_enable) {
 
 void main(void)
 {
-	volatile unsigned long i;
+	unsigned long i;
 	unsigned int x;
 	unsigned int shifter = 0x01;
 	int mode = 0;
@@ -41,12 +41,14 @@ void main(void)
 	
 	
 	/* Clear the irq flag for P1.3, so we don't throw an immediate irq
-	 * Then turn on IRQs
+	 * Then turn on IRQs for P1.3
 	 */
 	P1IFG &= ~BIT3;
 	P1IE |= BIT3;
 	
 	_enable_interrupt(); // umm, what it says
+
+
 //#define foo 1
 #ifndef foo
 
