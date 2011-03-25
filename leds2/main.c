@@ -28,8 +28,6 @@ void _init_board(int button_enable) {
 void main(void)
 {
 	unsigned long i;
-	unsigned int x;
-	unsigned int shifter = 0x01;
 	int mode = 0;
 	int dir2 = 1;
 	
