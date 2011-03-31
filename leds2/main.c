@@ -1,4 +1,10 @@
+
+#ifdef __GNUC__
+#include <io.h>
+#include <signal.h>
+#else
 #include  <msp430g2231.h>
+#endif
 
 /* Global for delay timer */
 volatile int delay_multiplyer = 5;
@@ -7,10 +13,10 @@ volatile int dir = 1;
 /*
  * basic init function.  Use this for almost every project
  */
-void _init_board(int button_enable) {
+void init_board(int button_enable) {
 	/* Set all p1.x and p2.x to output (saves power) */
 	P1DIR = 0xff; 
-	P2DIR = 0xff;
+    P2DIR = 0xff;
 	
 	/* Set all pins to low */
 	P1OUT = 0;
@@ -25,101 +31,63 @@ void _init_board(int button_enable) {
 	}
 }
 
-void main(void)
+int main(void)
 {
 	unsigned long i;
 	int mode = 0;
 	int dir2 = 1;
-	
-	_init_board(1);
-	P1OUT = 0xff;
 
 	
+	init_board(1);
+	
 	P1IES |= BIT3;   // high -> low is selected with IES.x = 1.
-	
-	
-	/* Clear the irq flag for P1.3, so we don't throw an immediate irq
+
+	/*
+     * Clear the irq flag for P1.3, so we don't throw an immediate irq
 	 * Then turn on IRQs for P1.3
 	 */
 	P1IFG &= ~BIT3;
 	P1IE |= BIT3;
 	
+#ifdef __GNUC__
+    WRITE_SR(GIE);
+#else
 	_enable_interrupt(); // umm, what it says
-
-
-//#define foo 1
-#ifndef foo
-
-		for (;;){
-			//i = 50000*delay_multiplyer;
-			//i = 5000*delay_multiplyer;
-			i = 2000*delay_multiplyer;
-
-			do (i--);
-			while (i != 0);
-
-			P1OUT = 0;
-			if (mode%5 == 0){
-				P1OUT |= BIT0;
-			}
-			else if (mode%5 == 1) {
-				P1OUT |= BIT4;
-			}
-			else if (mode%5 == 2){
-				P1OUT |= BIT5;
-			}
-			else if (mode%5 == 3) {
-				P1OUT |= BIT6;
-			}
-			else if (mode%5 == 4) {
-				P1OUT |= BIT7;
-			}
-			
-			if (dir2){
-				mode++;
-				if (mode == 4) {
-					dir2 = 0;
-				}
-			}
-			else {
-				mode--;
-				if (mode == 0) {
-					dir2 = 1;
-				}
-			}
-				
-	}
 #endif
-} 
 
+    BCSCTL3 |= LFXT1S_2;
+    TACTL = TASSEL_1 | MC_1;
+    TACCTL0 = CCIE;
+    TACCR0 = 2400 * delay_multiplyer;
 
-/* IRQ handler on GPIO port 1 */
-#pragma vector = PORT1_VECTOR
-__interrupt void P1_ISR(void) {
-	switch(P1IFG&BIT3) {
-		case BIT3:
-			P1IFG &= ~BIT3; // clear
-			
-			if (dir){
-				delay_multiplyer--;
-				if (delay_multiplyer == 1){
-					dir = 0;
-				}
-			}
-			else {
-				delay_multiplyer++;
-				if (delay_multiplyer == 5){
-					dir = 1;
-				}
-			}
-			return;
-		default:
-			 /* clear all flags -->
-			  * This can cause lost IRQs, but we only have one input, so 
-			  * it's a non-issue here.
-			  */
-			P1IFG = 0;
-			return;
-	}
+    while(1){
+        //nothing
+    }
 }
 
+#ifdef __GNUC__
+interrupt(TIMERA0_VECTOR) TIMERA0_ISR(void) {
+#else
+#pragma vector = TIMERA0_VECTOR
+__interrupt void TIMERA0_ISR(void) {
+#endif
+    P1OUT ^= BIT0;
+}
+
+#ifdef __GNUC__
+interrupt(PORT1_VECTOR) P1_ISR(void) {
+#else
+#pragma vector = PORT1_VECTOR
+__interrupt void P1_ISR(void) {
+#endif
+    switch(P1IFG&BIT3) {
+        case BIT3:
+            P1IFG &= ~BIT3; // clear
+            TACCR0 = 2400 * delay_multiplyer--;
+            return;
+        default:
+            P1IFG = 0;
+            return;
+    }
+}
+            
