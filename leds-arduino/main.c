@@ -1,3 +1,4 @@
+#include <WProgram.h>
 
 #define SLEEPER 200
 
@@ -52,5 +53,17 @@ void loop() {
 
     delay(SLEEPER*multiplyer);
 
+}
+
+int main(void)
+{
+	init();
+
+	setup();
+    
+	for (;;)
+		loop();
+        
+	return 0;
 }
 
