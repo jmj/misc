@@ -10,17 +10,22 @@ import (
 	"flag"
 )
 
-var iprange string
-var timeout int
-var ifname string
 
 func main() {
+	var timeout int
+	var ifname string
 
-	flag.StringVar(&iprange, "i", "", "CIDR Range to scan")
+	//flag.StringVar(&iprange, "i", "", "CIDR Range to scan")
 	flag.IntVar(&timeout, "t", 300, "Time out (in milliseconds) for arp requests")
 	flag.StringVar(&ifname, "e", "wlp0s20f3", "Physical ethernet interface to use")
 
 	flag.Parse()
+
+	args := flag.Args()
+	if len(args) < 1 {
+		panic("IP Range to scan is required")
+	}
+	iprange := args[0]
 
 	netif, err := net.InterfaceByName(ifname)
 	if err != nil {
