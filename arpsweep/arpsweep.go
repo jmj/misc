@@ -7,6 +7,7 @@ import (
 	"net/netip"
 	"net"
 	"time"
+	"flag"
 //	"os"
 //	"errors"
 )
@@ -14,14 +15,25 @@ import (
 var testip = "192.168.1.1"
 var testcidr = "192.168.1.0/24"
 
+
+var iprange string
+var timeout int
+var ifname string
+
 func main() {
 
-	netif, err := net.InterfaceByName("wlp0s20f3")
+	flag.StringVar(&iprange, "i", "", "CIDR Range to scan")
+	flag.IntVar(&timeout, "t", 300, "Time out (in milliseconds) for arp requests")
+	flag.StringVar(&ifname, "e", "wlp0s20f3", "Physical ethernet interface to use")
+
+	flag.Parse()
+
+	netif, err := net.InterfaceByName(ifname)
 	if err != nil {
 		panic(err)
 	}
 
-	cidr, err := cidr.Parse(testcidr)
+	cidr, err := cidr.Parse(iprange)
 	if err != nil {
 		panic(err)
 	}
@@ -48,7 +60,7 @@ func main() {
 		}
 
 		//c.SetDeadline(time.Now().Add(time.Millisecond*300))
-		c.SetDeadline(time.Now().Add(time.Millisecond*100))
+		c.SetDeadline(time.Now().Add(time.Millisecond*time.Duration(timeout)))
 
 		fmt.Printf("%s: ", ip)
 		hw, err := c.Resolve(ipaddr)
