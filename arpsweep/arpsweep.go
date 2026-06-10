@@ -8,13 +8,7 @@ import (
 	"net"
 	"time"
 	"flag"
-//	"os"
-//	"errors"
 )
-
-var testip = "192.168.1.1"
-var testcidr = "192.168.1.0/24"
-
 
 var iprange string
 var timeout int
