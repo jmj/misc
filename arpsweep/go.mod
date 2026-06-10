@@ -1,4 +1,4 @@
-module letifer.org/goarp
+module letifer.org/arpsweep
 
 go 1.26.2
 
